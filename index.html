@@ -32,7 +32,7 @@
       <div class="flex flex-wrap gap-2 justify-end items-center">
         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Simulated API (JSON)</span>
         <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">Live Ready</span>
-        <span id="healthIndicator" class="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">Alpha Key: Unknown</span>
+        <span id="healthIndicator" title="Shows if Alpha Vantage API key is configured on the backend (used as fallback when Yahoo data is missing)." class="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">Alpha Key: Unknown</span>
         <button id="toggleTheme" class="text-xs px-3 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-800" type="button" aria-pressed="false">Dark</button>
       </div>
     </header>
@@ -96,7 +96,7 @@
             Refresh
           </button>
           <span id="status" class="ml-2 text-xs text-gray-600" role="status" aria-live="polite"></span>
-          <span id="healthIndicatorControls" class="ml-2 text-xs rounded px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">Alpha Key: Unknown</span>
+          <span id="healthIndicatorControls" title="Backend Alpha Vantage key status (fallback quotes). Hidden when simulated mode is on." class="ml-2 text-xs rounded px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">Alpha Key: Unknown</span>
           <!-- Dev controls for demo -->
           <button id="devAdvanceDay" class="ml-2 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Simulate next day to increment streak" type="button">Dev: +1 day</button>
           <button id="devResetAch" class="ml-1 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Clear achievements" type="button">Reset</button>

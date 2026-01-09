@@ -569,6 +569,7 @@ intervalSelect.addEventListener("change", () => {
 liveToggle.addEventListener("change", () => {
   // On mode change, refresh immediately to reflect UI
   refresh();
+  setHealthVisible(!!liveToggle.checked);
 });
 forceFresh.addEventListener("change", () => {
   // Force fresh is dev; refresh now if toggled
@@ -647,6 +648,7 @@ initUI();
 checkHealth();
 if (healthTimer) clearInterval(healthTimer);
 healthTimer = setInterval(checkHealth, 300000); // 5 minutes
+setHealthVisible(!!(liveToggle && liveToggle.checked));
 saveBackendBtn?.addEventListener("click", () => {
   let val = (backendUrlInput?.value || "").trim();
   const norm = normalizeBase(val);
@@ -699,4 +701,11 @@ function updateHealthBadge(el, enabled) {
     el.classList.remove("bg-emerald-50","text-emerald-700","bg-rose-50","text-rose-700");
     el.classList.add("bg-slate-100","text-slate-700");
   }
+}
+
+function setHealthVisible(visible) {
+  try {
+    if (healthIndicator) healthIndicator.classList.toggle("hidden", !visible);
+    if (healthIndicatorControls) healthIndicatorControls.classList.toggle("hidden", !visible);
+  } catch {}
 }
