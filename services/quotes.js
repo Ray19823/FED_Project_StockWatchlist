@@ -39,16 +39,42 @@ function setCache(symbol, data, ttlMs = DEFAULT_TTL_MS) {
 
 function normalizeYahooQuote(q) {
   if (!q) return null;
-  const price =
-    q.regularMarketPrice ?? q.postMarketPrice ?? q.preMarketPrice ?? null;
-  const ts = q.regularMarketTime || q.postMarketTime || q.preMarketTime || null;
+  const ms = q.marketState;
+  let price = null;
+  let change = null;
+  let changePercent = null;
+  let ts = null;
+
+  if (ms === "PRE" && typeof q.preMarketPrice === "number") {
+    price = q.preMarketPrice;
+    change = q.preMarketChange ?? null;
+    changePercent = q.preMarketChangePercent ?? null;
+    ts = q.preMarketTime || null;
+  } else if ((ms === "POST" || ms === "POSTPOST") && typeof q.postMarketPrice === "number") {
+    price = q.postMarketPrice;
+    change = q.postMarketChange ?? null;
+    changePercent = q.postMarketChangePercent ?? null;
+    ts = q.postMarketTime || null;
+  } else {
+    price = q.regularMarketPrice ?? null;
+    change = q.regularMarketChange ?? null;
+    changePercent = q.regularMarketChangePercent ?? null;
+    ts = q.regularMarketTime || null;
+  }
+
+  // Fallbacks if some fields are missing
+  if (price == null) price = q.postMarketPrice ?? q.preMarketPrice ?? null;
+  if (change == null) change = q.postMarketChange ?? q.preMarketChange ?? null;
+  if (changePercent == null)
+    changePercent = q.postMarketChangePercent ?? q.preMarketChangePercent ?? null;
+  if (!ts) ts = q.postMarketTime || q.preMarketTime || null;
   return {
     symbol: (q.symbol || "").toUpperCase(),
     name: q.longName || q.shortName || q.displayName || "",
     price: typeof price === "number" ? price : null,
     currency: q.currency || null,
-    change: q.regularMarketChange ?? null,
-    changePercent: q.regularMarketChangePercent ?? null,
+    change: typeof change === "number" ? change : null,
+    changePercent: typeof changePercent === "number" ? changePercent : null,
     updatedAt: ts
       ? (typeof ts === "number" ? new Date(ts * 1000).toISOString() : new Date(ts).toISOString())
       : new Date().toISOString(),
@@ -102,24 +128,29 @@ async function fetchAlphaVantage(symbol) {
   return normalizeAlphaVantageQuote(data, symbol);
 }
 
-async function getQuotesRaw(symbols) {
+async function getQuotesRaw(symbols, opts = {}) {
+  const noCache = !!opts.noCache;
   const unique = Array.from(new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean)));
   if (unique.length === 0) return [];
 
   // 1) Try cache
   const out = [];
   const toFetch = [];
-  for (const s of unique) {
-    const cached = getFromCache(s);
-    if (cached) out.push(cached);
-    else toFetch.push(s);
+  if (!noCache) {
+    for (const s of unique) {
+      const cached = getFromCache(s);
+      if (cached) out.push(cached);
+      else toFetch.push(s);
+    }
+  } else {
+    toFetch.push(...unique);
   }
 
   // 2) Try Yahoo for remaining
   const yahooResults = await fetchYahoo(toFetch);
   const got = new Set();
   for (const q of yahooResults) {
-    setCache(q.symbol, q);
+    if (!noCache) setCache(q.symbol, q);
     out.push(q);
     got.add(q.symbol);
   }
@@ -130,7 +161,7 @@ async function getQuotesRaw(symbols) {
     try {
       const q = await fetchAlphaVantage(s);
       if (q) {
-        setCache(s, q);
+        if (!noCache) setCache(s, q);
         out.push(q);
       }
     } catch (_) {
@@ -143,14 +174,14 @@ async function getQuotesRaw(symbols) {
   return unique.map((s) => bySymbol.get(s) || { symbol: s, error: "not_found" });
 }
 
-async function getQuotes(symbolsOrString) {
+async function getQuotes(symbolsOrString, opts = {}) {
   const syms = Array.isArray(symbolsOrString)
     ? symbolsOrString
     : String(symbolsOrString || "")
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-  return getQuotesRaw(syms);
+  return getQuotesRaw(syms, opts);
 }
 
 module.exports = {

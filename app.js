@@ -61,6 +61,8 @@ app.get("/api/quotes", async (req, res) => {
   try {
     let symbols = [];
     const q = (req.query.symbols || "").trim();
+    const noCache = String(req.query.nocache || "").toLowerCase();
+    const noCacheFlag = noCache === "1" || noCache === "true";
     if (q) {
       symbols = q.split(",").map((s) => s.trim()).filter(Boolean);
     } else {
@@ -68,7 +70,7 @@ app.get("/api/quotes", async (req, res) => {
       symbols = list.map((x) => x.symbol).filter(Boolean);
     }
 
-    const results = await getQuotes(symbols);
+    const results = await getQuotes(symbols, { noCache: noCacheFlag });
     res.json({ symbols: symbols.map((s) => s.toUpperCase()), quotes: results });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch quotes" });

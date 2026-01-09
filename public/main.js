@@ -8,6 +8,10 @@ const nameInput = document.getElementById("nameInput");
 const notesInput = document.getElementById("notesInput");
 const addBtn = document.getElementById("addBtn");
 const refreshBtn = document.getElementById("refreshBtn");
+const liveToggle = document.getElementById("liveToggle");
+const autoToggle = document.getElementById("autoToggle");
+const intervalSelect = document.getElementById("intervalSelect");
+const forceFresh = document.getElementById("forceFresh");
 const msg = document.getElementById("msg");
 
 // Toast (subtle)
@@ -244,28 +248,49 @@ function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
+let autoTimer = null;
+
+function stopAuto() {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+}
+
+function startAuto() {
+  stopAuto();
+  if (!autoToggle.checked) return;
+  const ms = Number(intervalSelect.value || 30000);
+  autoTimer = setInterval(() => refresh(), ms);
+}
+
 // --- Load/Refresh ---
-async function load() {
+async function load({ live = true, nocache = false } = {}) {
   setMsg("Loading...");
   try {
     const items = await apiGet();
-    const symbols = items.map((x) => x.symbol).filter(Boolean);
-    let quotes = [];
-    try {
-      if (symbols.length) {
-        const res = await fetch(`${QUOTES_API}?symbols=${encodeURIComponent(symbols.join(","))}`);
-        if (res.ok) {
-          const data = await res.json();
-          quotes = Array.isArray(data.quotes) ? data.quotes : [];
+    if (!live) {
+      render(items);
+    } else {
+      const symbols = items.map((x) => x.symbol).filter(Boolean);
+      let quotes = [];
+      try {
+        if (symbols.length) {
+          const qs = new URLSearchParams({ symbols: symbols.join(",") });
+          if (nocache) qs.set("nocache", "1");
+          const res = await fetch(`${QUOTES_API}?${qs.toString()}`);
+          if (res.ok) {
+            const data = await res.json();
+            quotes = Array.isArray(data.quotes) ? data.quotes : [];
+          }
         }
+      } catch (e) {
+        // Ignore quote fetch errors; fallback to simulated prices
       }
-    } catch (e) {
-      // Ignore quote fetch errors; fallback to simulated prices
+      const bySym = new Map(quotes.map((q) => [q.symbol, q]));
+      const merged = items.map((it) => ({ ...it, _quote: bySym.get(it.symbol) }));
+      render(merged);
     }
-
-    const bySym = new Map(quotes.map((q) => [q.symbol, q]));
-    const merged = items.map((it) => ({ ...it, _quote: bySym.get(it.symbol) }));
-    render(merged);
     setMsg("");
   } catch (e) {
     setMsg("Failed to load watchlist.");
@@ -304,9 +329,29 @@ addBtn.addEventListener("click", async () => {
 });
 
 // Refresh prices (GET triggers simulation in backend)
-refreshBtn.addEventListener("click", async () => {
-  showToast("Refreshing prices...");
-  await load();
+function refresh() {
+  const live = !!liveToggle.checked;
+  const nocache = !!forceFresh.checked;
+  showToast(live ? "Refreshing live quotes..." : "Refreshing simulated...");
+  return load({ live, nocache });
+}
+
+refreshBtn.addEventListener("click", refresh);
+
+autoToggle.addEventListener("change", () => {
+  startAuto();
+});
+intervalSelect.addEventListener("change", () => {
+  startAuto();
+});
+liveToggle.addEventListener("change", () => {
+  // On mode change, refresh immediately to reflect UI
+  refresh();
+});
+forceFresh.addEventListener("change", () => {
+  // Force fresh is dev; refresh now if toggled
+  if (autoToggle.checked) startAuto();
 });
 
-load();
+// Initial load in live mode
+load({ live: true, nocache: false });

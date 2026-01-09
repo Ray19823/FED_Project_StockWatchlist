@@ -62,12 +62,31 @@
     <section class="bg-white rounded-lg shadow p-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold">Your Watchlist</h2>
-        <button
-          id="refreshBtn"
-          class="border px-3 py-2 rounded hover:bg-gray-50"
-        >
-          Refresh Prices
-        </button>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="liveToggle" class="accent-blue-600" checked />
+            <span>Live Quotes</span>
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="autoToggle" class="accent-blue-600" />
+            <span>Auto-refresh</span>
+          </label>
+          <select id="intervalSelect" class="border rounded px-2 py-1 text-sm">
+            <option value="15000">15s</option>
+            <option value="30000" selected>30s</option>
+            <option value="60000">60s</option>
+          </select>
+          <label class="flex items-center gap-2 text-xs text-gray-600">
+            <input type="checkbox" id="forceFresh" class="accent-blue-600" />
+            <span>Force fresh (dev)</span>
+          </label>
+          <button
+            id="refreshBtn"
+            class="border px-3 py-2 rounded hover:bg-gray-50"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       <ul id="watchlist" class="space-y-3"></ul>

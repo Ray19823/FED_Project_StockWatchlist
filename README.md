@@ -32,3 +32,9 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 ### Frontend Behavior
 - The UI loads the watchlist and then fetches live quotes via `/api/quotes` for those symbols.
 - If a quote is available, price, currency, change and timestamp are shown with a "live" indicator; otherwise simulated prices are displayed.
+
+### Live Refresh Controls
+- Live Quotes: toggles between fetching live quotes vs. using simulated backend prices.
+- Auto-refresh: when enabled, periodically refreshes using the selected interval (15s/30s/60s). This respects server caching.
+- Force fresh (dev): sets `nocache=1` when calling `/api/quotes` to bypass the server cache. Use sparingly.
+- Server cache TTL: configure via `QUOTES_TTL_MS` (default 5 minutes). Set `QUOTES_TTL_MS=0` during development to always fetch fresh quotes.
