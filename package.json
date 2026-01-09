@@ -4,7 +4,9 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start:free": "node scripts/freeport.js && node app.js",
+    "dev": "nodemon app.js",
+    "dev:free": "node scripts/freeport.js && nodemon app.js"
   },
   "dependencies": {
     "express": "^4.22.1"
