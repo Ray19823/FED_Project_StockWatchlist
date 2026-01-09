@@ -1,5 +1,46 @@
-const API = "/api/watchlist";
-const QUOTES_API = "/api/quotes";
+function isValidUrl(s) {
+  try {
+    new URL(s);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeBase(s) {
+  if (!s) return "";
+  let v = String(s).trim();
+  if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  // drop trailing slash
+  v = v.replace(/\/$/, "");
+  return isValidUrl(v) ? v : "";
+}
+
+function getApiBase() {
+  // Allow override via localStorage or global
+  const ls = (typeof localStorage !== "undefined") ? localStorage.getItem("API_BASE") : "";
+  if (ls && typeof ls === "string") {
+    const norm = normalizeBase(ls);
+    if (norm) return norm;
+    try { localStorage.removeItem("API_BASE"); } catch {}
+  }
+  if (typeof window !== "undefined" && window.API_BASE && typeof window.API_BASE === "string") {
+    const norm = normalizeBase(window.API_BASE);
+    if (norm) return norm;
+  }
+  const host = (typeof location !== "undefined") ? location.hostname.toLowerCase() : "";
+  // Local dev: use same origin
+  if (host === "localhost" || host === "127.0.0.1") return "";
+  // GitHub Pages: auto-default to your Render URL if present
+  if (host.includes("ray19823.github.io")) {
+    return "https://fed-project-stockwatchlist.onrender.com";
+  }
+  // Other static hosts: default empty (user sets Backend URL)
+  return "";
+}
+let API_BASE = getApiBase();
+function url(p) { return `${API_BASE}${p}`; }
 
 // Elements
 let currentLiveMode = true;
@@ -23,11 +64,15 @@ const badgesEl = document.getElementById("badges");
 const streakCountEl = document.getElementById("streakCount");
 const devAdvanceDayBtn = document.getElementById("devAdvanceDay");
 const devResetAchBtn = document.getElementById("devResetAch");
+const backendUrlInput = document.getElementById("backendUrl");
+const saveBackendBtn = document.getElementById("saveBackend");
 
 // Toast (subtle)
 const toast = document.createElement("div");
 toast.className =
   "fixed top-4 right-4 z-50 hidden max-w-sm rounded-lg border bg-white px-4 py-3 shadow";
+toast.setAttribute("role", "status");
+toast.setAttribute("aria-live", "polite");
 document.body.appendChild(toast);
 
 function showToast(text, type = "info") {
@@ -35,16 +80,34 @@ function showToast(text, type = "info") {
   toast.classList.remove("hidden");
 
   toast.classList.remove("border-gray-200", "border-green-200", "border-red-200");
-  if (type === "success") toast.classList.add("border-green-200");
-  else if (type === "error") toast.classList.add("border-red-200");
-  else toast.classList.add("border-gray-200");
+  if (type === "success") {
+    toast.classList.add("border-green-200");
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+  } else if (type === "error") {
+    toast.classList.add("border-red-200");
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("aria-live", "assertive");
+  } else {
+    toast.classList.add("border-gray-200");
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+  }
 
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toast.classList.add("hidden"), 1700);
 }
 
 function setMsg(text = "") {
+  if (!msg) return;
   msg.textContent = text;
+  if (text) {
+    msg.setAttribute("role", "status");
+    msg.setAttribute("aria-live", "polite");
+  } else {
+    msg.removeAttribute("role");
+    msg.removeAttribute("aria-live");
+  }
 }
 
 // --- Achievements state ---
@@ -126,13 +189,13 @@ function renderAchievements() {
 
 // --- API Helpers ---
 async function apiGet() {
-  const res = await fetch(API);
+  const res = await fetch(url("/api/watchlist"));
   if (!res.ok) throw new Error("Failed to load watchlist");
   return res.json();
 }
 
 async function apiPost(payload) {
-  const res = await fetch(API, {
+  const res = await fetch(url("/api/watchlist"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -143,7 +206,7 @@ async function apiPost(payload) {
 }
 
 async function apiPut(id, payload) {
-  const res = await fetch(`${API}/${id}`, {
+  const res = await fetch(url(`/api/watchlist/${id}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -154,7 +217,7 @@ async function apiPut(id, payload) {
 }
 
 async function apiDelete(id) {
-  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+  const res = await fetch(url(`/api/watchlist/${id}`), { method: "DELETE" });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to delete stock");
   return data;
@@ -357,6 +420,8 @@ function startAuto() {
 async function load({ live = true, nocache = false } = {}) {
   setMsg("Loading...");
   currentLiveMode = !!live;
+  const mainEl = document.getElementById("mainContent");
+  if (mainEl) mainEl.setAttribute("aria-busy", "true");
   try {
     const items = await apiGet();
     if (!live) {
@@ -368,7 +433,7 @@ async function load({ live = true, nocache = false } = {}) {
         if (symbols.length) {
           const qs = new URLSearchParams({ symbols: symbols.join(",") });
           if (nocache) qs.set("nocache", "1");
-          const res = await fetch(`${QUOTES_API}?${qs.toString()}`);
+          const res = await fetch(url(`/api/quotes?${qs.toString()}`));
           if (res.ok) {
             const data = await res.json();
             quotes = Array.isArray(data.quotes) ? data.quotes : [];
@@ -389,6 +454,9 @@ async function load({ live = true, nocache = false } = {}) {
   } catch (e) {
     setMsg("Failed to load watchlist.");
     showToast(e.message, "error");
+  } finally {
+    const mainEl2 = document.getElementById("mainContent");
+    if (mainEl2) mainEl2.setAttribute("aria-busy", "false");
   }
 }
 
@@ -463,6 +531,8 @@ function showTab(tab) {
     tabAchievements?.classList.remove("border");
     tabWatchlist?.classList.remove("bg-blue-600","text-white");
     tabWatchlist?.classList.add("border");
+    tabAchievements?.setAttribute("aria-selected", "true");
+    tabWatchlist?.setAttribute("aria-selected", "false");
     renderAchievements();
   } else {
     watchlistSection.classList.remove("hidden");
@@ -471,6 +541,8 @@ function showTab(tab) {
     tabWatchlist?.classList.remove("border");
     tabAchievements?.classList.remove("bg-blue-600","text-white");
     tabAchievements?.classList.add("border");
+    tabWatchlist?.setAttribute("aria-selected", "true");
+    tabAchievements?.setAttribute("aria-selected", "false");
   }
 }
 
@@ -495,4 +567,27 @@ devResetAchBtn?.addEventListener("click", () => {
   localStorage.removeItem(LS_LAST);
   renderAchievements();
   showToast("Achievements reset", "success");
+});
+
+// --- Backend URL controls ---
+function syncBackendInput() {
+  if (!backendUrlInput) return;
+  backendUrlInput.value = API_BASE || "";
+  if (!API_BASE && location.hostname.toLowerCase().includes("github.io")) {
+    showToast("Tip: set Backend URL (Render) for live site", "info");
+  }
+}
+syncBackendInput();
+saveBackendBtn?.addEventListener("click", () => {
+  let val = (backendUrlInput?.value || "").trim();
+  const norm = normalizeBase(val);
+  if (!norm) {
+    showToast("Enter a valid URL, e.g. https://fed-project-stockwatchlist.onrender.com", "error");
+    return;
+  }
+  API_BASE = norm;
+  try { localStorage.setItem("API_BASE", API_BASE); } catch {}
+  if (backendUrlInput) backendUrlInput.value = API_BASE;
+  showToast("Backend URL saved", "success");
+  refresh();
 });
