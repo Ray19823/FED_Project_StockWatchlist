@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (latest LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies (deterministic)
+        run: npm ci
+
+      - name: Start server and wait for health endpoint
+        run: |
+          node app.js &
+          echo $! > server.pid
+          # Wait up to ~20s for server to be ready
+          for i in {1..40}; do
+            if curl -fsS http://localhost:3000/api/health >/dev/null; then
+              break
+            fi
+            sleep 0.5
+          done
+          if ! curl -fsS http://localhost:3000/api/health >/dev/null; then
+            echo "Server did not become ready" >&2
+            kill $(cat server.pid) || true
+            exit 1
+          fi
+
+      - name: Smoke test /api/health
+        run: |
+          curl -fsS http://localhost:3000/api/health | grep -q '"ok":true'
+
+      - name: Stop server
+        if: always()
+        run: |
+          kill $(cat server.pid) || true
