@@ -1,12 +1,44 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+// --- CORS ---
+const defaultOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://ray19823.github.io",
+];
+const extraOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const allowList = [...new Set([...defaultOrigins, ...extraOrigins])];
+
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // same-origin or curl
+      try {
+        const ok =
+          allowList.includes(origin) ||
+          /\.github\.io$/.test(new URL(origin).hostname);
+        return cb(null, ok);
+      } catch {
+        return cb(null, false);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Accept"],
+    credentials: false,
+  })
+);
 
 const DATA_FILE = path.join(__dirname, "data", "watchlist.json");
 const { getQuotes } = require(path.join(__dirname, "services", "quotes.js"));

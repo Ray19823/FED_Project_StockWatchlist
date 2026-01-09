@@ -11,3 +11,5 @@ services:
         value: "300000"
       - key: ALPHAVANTAGE_API_KEY
         generateValue: true
+      - key: CORS_ORIGINS
+        value: "https://ray19823.github.io"
