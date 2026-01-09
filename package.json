@@ -6,13 +6,15 @@
     "start": "node app.js",
     "start:free": "node scripts/freeport.js && node app.js",
     "dev": "nodemon app.js",
-    "dev:free": "node scripts/freeport.js && nodemon app.js"
+    "dev:free": "node scripts/freeport.js && nodemon app.js",
+    "deploy:pages": "gh-pages -d public"
   },
   "dependencies": {
     "express": "^4.22.1",
     "yahoo-finance2": "^3.11.2"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "nodemon": "^3.1.11"
   }
 }

@@ -56,4 +56,23 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 - Live Backend (Server/Serverless): [https://<name>-app.onrender.com]
 
  See design brief at [docs/design/figma-brief.md](docs/design/figma-brief.md) and hi-fi specs at
- [docs/design/hifi-desktop.md](docs/design/hifi-desktop.md) and [docs/design/hifi-mobile.md](docs/design/hifi-mobile.md).
+ [docs/design/hifi-desktop.md](docs/design/hifi-desktop.md) and [docs/design/hifi-mobile.md](docs/design/hifi-mobile.md). Achievements spec: [docs/design/achievements.md](docs/design/achievements.md).
+
+## Deployment
+
+### GitHub Pages (Frontend)
+- Install tooling: `npm install --save-dev gh-pages`
+- Add script: `deploy:pages` to publish the `public/` folder (already configured below).
+- Deploy: `npm run deploy:pages` — this creates/updates the `gh-pages` branch.
+- In GitHub repo settings → Pages: Source = `gh-pages` branch.
+
+### Render (Backend)
+- Render auto-detects Node apps. Use the included `render.yaml` or create a Web Service from the repo.
+- Build: `npm ci`
+- Start: `npm start`
+- Environment variables:
+	- `PORT` (provided by Render)
+	- `QUOTES_TTL_MS` (e.g., `300000` default 5 minutes; `0` for dev)
+	- `ALPHAVANTAGE_API_KEY` (optional fallback provider)
+
+Once deployed, set CORS or use same-origin when front-end calls the backend.

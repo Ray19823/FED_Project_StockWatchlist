@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fed-stock-watchlist
+    env: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: QUOTES_TTL_MS
+        value: "300000"
+      - key: ALPHAVANTAGE_API_KEY
+        generateValue: true
