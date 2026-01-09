@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Watchlist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <main class="max-w-3xl mx-auto p-6">
+    
+    <!-- Simple Tabs -->
+    <nav class="mb-6 flex items-center gap-2" aria-label="Sections">
+      <button id="tabWatchlist" class="px-3 py-2 rounded bg-blue-600 text-white">Watchlist</button>
+      <button id="tabAchievements" class="px-3 py-2 rounded border">Achievements</button>
+    </nav>
+
+    <!-- Header -->
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-bold">Stock Watchlist</h1>
+      <p class="text-gray-600 mt-2">
+        Track your favourite stocks with notes and live prices (where available)
+      </p>
+    </header>
+
+    <!-- Add Stock -->
+    <section class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Add Stock</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input
+          id="symbolInput"
+          type="text"
+          placeholder="Symbol (e.g. AAPL)"
+          aria-label="Stock symbol"
+          class="border rounded px-3 py-2 focus:outline-none focus:ring"
+        />
+
+        <input
+          id="nameInput"
+          type="text"
+          placeholder="Company name"
+          aria-label="Company name"
+          class="border rounded px-3 py-2 focus:outline-none focus:ring"
+        />
+
+        <input
+          id="notesInput"
+          type="text"
+          placeholder="Notes"
+          aria-label="Notes"
+          class="border rounded px-3 py-2 focus:outline-none focus:ring"
+        />
+      </div>
+
+      <button
+        id="addBtn"
+        class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Add to Watchlist
+      </button>
+
+      <p id="msg" class="text-sm text-gray-600 mt-3"></p>
+    </section>
+
+    <!-- Watchlist -->
+    <section id="watchlistSection" class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Your Watchlist</h2>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="liveToggle" class="accent-blue-600" checked />
+            <span>Live Quotes</span>
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="autoToggle" class="accent-blue-600" />
+            <span>Auto-refresh</span>
+          </label>
+          <select id="intervalSelect" class="border rounded px-2 py-1 text-sm">
+            <option value="15000">15s</option>
+            <option value="30000" selected>30s</option>
+            <option value="60000">60s</option>
+          </select>
+          <label class="flex items-center gap-2 text-xs text-gray-600">
+            <input type="checkbox" id="forceFresh" class="accent-blue-600" />
+            <span>Force fresh (dev)</span>
+          </label>
+          <button
+            id="refreshBtn"
+            class="border px-3 py-2 rounded hover:bg-gray-50"
+          >
+            Refresh
+          </button>
+          <span id="status" class="ml-2 text-xs text-gray-600"></span>
+          <!-- Dev controls for demo -->
+          <button id="devAdvanceDay" class="ml-2 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Simulate next day to increment streak">Dev: +1 day</button>
+          <button id="devResetAch" class="ml-1 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Clear achievements">Reset</button>
+        </div>
+      </div>
+
+      <ul id="watchlist" class="space-y-3"></ul>
+    </section>
+
+    <!-- Achievements -->
+    <section id="achievementsSection" class="bg-white rounded-lg shadow p-6 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Achievements</h2>
+        <div class="text-sm text-gray-600">Streak: <span id="streakCount" class="font-semibold">0</span> days</div>
+      </div>
+      <div id="badges" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- badges will render here -->
+      </div>
+    </section>
+
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>
