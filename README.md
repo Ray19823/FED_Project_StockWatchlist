@@ -42,3 +42,10 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 - Auto-refresh: when enabled, periodically refreshes using the selected interval (15s/30s/60s). This respects server caching.
 - Force fresh (dev): sets `nocache=1` when calling `/api/quotes` to bypass the server cache. Use sparingly.
 - Server cache TTL: configure via `QUOTES_TTL_MS` (default 5 minutes). Set `QUOTES_TTL_MS=0` during development to always fetch fresh quotes.
+
+### Setup: Watchlist Data
+- The app stores your watchlist in `data/watchlist.json` locally (git-ignored).
+- To start fresh, copy the example file:
+	- macOS/Linux: `cp data/watchlist.example.json data/watchlist.json`
+	- Windows (PowerShell): `Copy-Item data/watchlist.example.json data/watchlist.json`
+- Alternatively, just add a stock in the UI and the file will be created automatically.
