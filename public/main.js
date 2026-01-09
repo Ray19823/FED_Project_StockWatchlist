@@ -4,6 +4,10 @@ const QUOTES_API = "/api/quotes";
 // Elements
 let currentLiveMode = true;
 const watchlistEl = document.getElementById("watchlist");
+const watchlistSection = document.getElementById("watchlistSection");
+const achievementsSection = document.getElementById("achievementsSection");
+const tabWatchlist = document.getElementById("tabWatchlist");
+const tabAchievements = document.getElementById("tabAchievements");
 const symbolInput = document.getElementById("symbolInput");
 const nameInput = document.getElementById("nameInput");
 const notesInput = document.getElementById("notesInput");
@@ -14,6 +18,9 @@ const autoToggle = document.getElementById("autoToggle");
 const intervalSelect = document.getElementById("intervalSelect");
 const forceFresh = document.getElementById("forceFresh");
 const msg = document.getElementById("msg");
+const statusEl = document.getElementById("status");
+const badgesEl = document.getElementById("badges");
+const streakCountEl = document.getElementById("streakCount");
 
 // Toast (subtle)
 const toast = document.createElement("div");
@@ -36,6 +43,83 @@ function showToast(text, type = "info") {
 
 function setMsg(text = "") {
   msg.textContent = text;
+}
+
+// --- Achievements state ---
+const LS_ACH = "achievements";
+const LS_STREAK = "streak";
+const LS_LAST = "lastRefreshDate";
+
+function getAchievements() {
+  try { return JSON.parse(localStorage.getItem(LS_ACH)) || {}; } catch { return {}; }
+}
+function setAchievements(obj) {
+  localStorage.setItem(LS_ACH, JSON.stringify(obj || {}));
+}
+function unlock(id) {
+  const ach = getAchievements();
+  if (!ach[id]) ach[id] = { unlockedAt: new Date().toISOString() };
+  setAchievements(ach);
+  renderAchievements();
+}
+function getStreak() {
+  return Number(localStorage.getItem(LS_STREAK) || 0);
+}
+function setStreak(n) {
+  localStorage.setItem(LS_STREAK, String(n));
+}
+function getLastDate() {
+  return localStorage.getItem(LS_LAST) || "";
+}
+function setLastDate(iso) {
+  localStorage.setItem(LS_LAST, iso);
+}
+function sameDay(a, b) {
+  const da = new Date(a), db = new Date(b);
+  return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate();
+}
+function yesterdayOf(iso) {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + 1);
+  const now = new Date();
+  return sameDay(d.toISOString(), now.toISOString());
+}
+function bumpStreak() {
+  const nowIso = new Date().toISOString();
+  const last = getLastDate();
+  let streak = getStreak();
+  if (!last) streak = 1;
+  else if (sameDay(last, nowIso)) {
+    // same calendar day: do not double-count
+  } else if (yesterdayOf(last)) {
+    streak += 1;
+  } else {
+    streak = 1;
+  }
+  setStreak(streak);
+  setLastDate(nowIso);
+  if (streak >= 3) unlock("streak3");
+  if (streak >= 7) unlock("streak7");
+  if (streak >= 14) unlock("streak14");
+}
+
+function renderAchievements() {
+  if (!badgesEl || !streakCountEl) return;
+  const ach = getAchievements();
+  streakCountEl.textContent = String(getStreak());
+  const defs = [
+    { id: "firstItem", title: "First Watchlist Item" },
+    { id: "noteTaker", title: "Note Taker" },
+    { id: "streak3", title: "3-Day Streak" },
+    { id: "streak7", title: "7-Day Streak" },
+    { id: "streak14", title: "14-Day Streak" },
+  ];
+  badgesEl.innerHTML = defs.map(d => {
+    const unlocked = !!ach[d.id];
+    const status = unlocked ? `Unlocked • ${new Date(ach[d.id].unlockedAt).toLocaleDateString()}` : "Locked";
+    const clr = unlocked ? "text-green-600 border-green-200" : "text-gray-600 border-gray-200";
+    return `<div class=\"rounded border ${clr} p-4\"><div class=\"font-semibold\">${d.title}</div><div class=\"text-sm mt-1\">${status}</div></div>`;
+  }).join("");
 }
 
 // --- API Helpers ---
@@ -203,6 +287,7 @@ function render(items) {
       try {
         await apiPut(item.id, { notes: newNotes });
         showToast("Notes updated!", "success");
+        unlock("noteTaker");
         await load();
       } catch (e) {
         showToast(e.message, "error");
@@ -295,6 +380,10 @@ async function load({ live = true, nocache = false } = {}) {
       render(merged);
     }
     setMsg("");
+    if (statusEl) {
+      const now = new Date();
+      statusEl.textContent = `Last refresh: ${now.toLocaleTimeString()}`;
+    }
   } catch (e) {
     setMsg("Failed to load watchlist.");
     showToast(e.message, "error");
@@ -322,6 +411,7 @@ addBtn.addEventListener("click", async () => {
     nameInput.value = "";
     notesInput.value = "";
     showToast("Added to watchlist!", "success");
+    unlock("firstItem");
     await load();
   } catch (e) {
     showToast(e.message, "error");
@@ -336,6 +426,8 @@ function refresh() {
   const live = !!liveToggle.checked;
   const nocache = !!forceFresh.checked;
   showToast(live ? "Refreshing live quotes..." : "Refreshing simulated...");
+  bumpStreak();
+  renderAchievements();
   return load({ live, nocache });
 }
 
@@ -358,3 +450,28 @@ forceFresh.addEventListener("change", () => {
 
 // Initial load in live mode
 load({ live: true, nocache: false });
+
+// --- Tabs ---
+function showTab(tab) {
+  if (!watchlistSection || !achievementsSection) return;
+  if (tab === "achievements") {
+    achievementsSection.classList.remove("hidden");
+    watchlistSection.classList.add("hidden");
+    tabAchievements?.classList.add("bg-blue-600","text-white");
+    tabAchievements?.classList.remove("border");
+    tabWatchlist?.classList.remove("bg-blue-600","text-white");
+    tabWatchlist?.classList.add("border");
+    renderAchievements();
+  } else {
+    watchlistSection.classList.remove("hidden");
+    achievementsSection.classList.add("hidden");
+    tabWatchlist?.classList.add("bg-blue-600","text-white");
+    tabWatchlist?.classList.remove("border");
+    tabAchievements?.classList.remove("bg-blue-600","text-white");
+    tabAchievements?.classList.add("border");
+  }
+}
+
+tabWatchlist?.addEventListener("click", () => showTab("watchlist"));
+tabAchievements?.addEventListener("click", () => showTab("achievements"));
+showTab("watchlist");

@@ -10,6 +10,12 @@
 <body class="bg-gray-100 min-h-screen">
   <main class="max-w-3xl mx-auto p-6">
     
+    <!-- Simple Tabs -->
+    <nav class="mb-6 flex items-center gap-2" aria-label="Sections">
+      <button id="tabWatchlist" class="px-3 py-2 rounded bg-blue-600 text-white">Watchlist</button>
+      <button id="tabAchievements" class="px-3 py-2 rounded border">Achievements</button>
+    </nav>
+
     <!-- Header -->
     <header class="mb-8 text-center">
       <h1 class="text-3xl font-bold">Stock Watchlist</h1>
@@ -59,7 +65,7 @@
     </section>
 
     <!-- Watchlist -->
-    <section class="bg-white rounded-lg shadow p-6">
+    <section id="watchlistSection" class="bg-white rounded-lg shadow p-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold">Your Watchlist</h2>
         <div class="flex items-center gap-2">
@@ -86,10 +92,22 @@
           >
             Refresh
           </button>
+          <span id="status" class="ml-2 text-xs text-gray-600"></span>
         </div>
       </div>
 
       <ul id="watchlist" class="space-y-3"></ul>
+    </section>
+
+    <!-- Achievements -->
+    <section id="achievementsSection" class="bg-white rounded-lg shadow p-6 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Achievements</h2>
+        <div class="text-sm text-gray-600">Streak: <span id="streakCount" class="font-semibold">0</span> days</div>
+      </div>
+      <div id="badges" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- badges will render here -->
+      </div>
     </section>
 
   </main>
