@@ -74,6 +74,8 @@ const formMsgEl = document.getElementById("formMsg");
 const compactToggle = document.getElementById("compactToggle");
 const toggleTheme = document.getElementById("toggleTheme");
 const healthIndicator = document.getElementById("healthIndicator");
+const healthIndicatorControls = document.getElementById("healthIndicatorControls");
+let healthTimer = null;
 
 // Toast (subtle)
 const toast = document.createElement("div");
@@ -643,6 +645,8 @@ function syncBackendInput() {
 syncBackendInput();
 initUI();
 checkHealth();
+if (healthTimer) clearInterval(healthTimer);
+healthTimer = setInterval(checkHealth, 300000); // 5 minutes
 saveBackendBtn?.addEventListener("click", () => {
   let val = (backendUrlInput?.value || "").trim();
   const norm = normalizeBase(val);
@@ -666,22 +670,33 @@ searchInput?.addEventListener("input", () => {
 
 // --- Health indicator ---
 async function checkHealth() {
-  if (!healthIndicator) return;
+  if (!healthIndicator && !healthIndicatorControls) return;
   try {
     const res = await fetch(url("/api/health"));
     if (!res.ok) throw new Error("bad status");
     const data = await res.json();
     const enabled = !!data.alphaEnabled;
-    healthIndicator.textContent = enabled ? "Alpha Key: On" : "Alpha Key: Off";
-    healthIndicator.classList.remove("bg-slate-100","text-slate-700","bg-rose-50","text-rose-700","bg-emerald-50","text-emerald-700");
-    if (enabled) {
-      healthIndicator.classList.add("bg-emerald-50","text-emerald-700");
-    } else {
-      healthIndicator.classList.add("bg-rose-50","text-rose-700");
-    }
+    updateHealthBadge(healthIndicator, enabled);
+    updateHealthBadge(healthIndicatorControls, enabled);
   } catch (e) {
-    healthIndicator.textContent = "Alpha Key: Unknown";
-    healthIndicator.classList.remove("bg-emerald-50","text-emerald-700","bg-rose-50","text-rose-700");
-    healthIndicator.classList.add("bg-slate-100","text-slate-700");
+    updateHealthBadge(healthIndicator, null);
+    updateHealthBadge(healthIndicatorControls, null);
+  }
+}
+
+function updateHealthBadge(el, enabled) {
+  if (!el) return;
+  if (enabled === true) {
+    el.textContent = "Alpha Key: On";
+    el.classList.remove("bg-slate-100","text-slate-700","bg-rose-50","text-rose-700");
+    el.classList.add("bg-emerald-50","text-emerald-700");
+  } else if (enabled === false) {
+    el.textContent = "Alpha Key: Off";
+    el.classList.remove("bg-slate-100","text-slate-700","bg-emerald-50","text-emerald-700");
+    el.classList.add("bg-rose-50","text-rose-700");
+  } else {
+    el.textContent = "Alpha Key: Unknown";
+    el.classList.remove("bg-emerald-50","text-emerald-700","bg-rose-50","text-rose-700");
+    el.classList.add("bg-slate-100","text-slate-700");
   }
 }
