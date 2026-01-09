@@ -9,6 +9,12 @@ updates:
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
+    # Keep us on current major versions (e.g., Express 4.x)
+    # Dependabot will still open minor/patch PRs, but skip majors.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       minor-and-patch:
         applies-to: "version-updates"
