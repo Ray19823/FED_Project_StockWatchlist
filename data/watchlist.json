@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "symbol": "AAPL",
+    "name": "Apple",
+    "notes": "Long-term",
+    "lastPrice": 185.2,
+    "updatedAt": "2026-01-03T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "symbol": "TSLA",
+    "name": "Tesla",
+    "notes": "Watch volatility",
+    "lastPrice": 242.3,
+    "updatedAt": "2026-01-03T00:00:00Z"
+  }
+]
