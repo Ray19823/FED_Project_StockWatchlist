@@ -44,6 +44,8 @@ function url(p) { return `${API_BASE}${p}`; }
 
 // Elements
 let currentLiveMode = true;
+let currentFilter = "";
+let lastItems = [];
 const watchlistEl = document.getElementById("watchlist");
 const watchlistSection = document.getElementById("watchlistSection");
 const achievementsSection = document.getElementById("achievementsSection");
@@ -66,6 +68,8 @@ const devAdvanceDayBtn = document.getElementById("devAdvanceDay");
 const devResetAchBtn = document.getElementById("devResetAch");
 const backendUrlInput = document.getElementById("backendUrl");
 const saveBackendBtn = document.getElementById("saveBackend");
+const searchInput = document.getElementById("search");
+const formMsgEl = document.getElementById("formMsg");
 
 // Toast (subtle)
 const toast = document.createElement("div");
@@ -227,19 +231,26 @@ async function apiDelete(id) {
 function render(items) {
   watchlistEl.innerHTML = "";
 
-  if (!items.length) {
+  const qfilter = (currentFilter || "").toLowerCase();
+  const filtered = qfilter
+    ? items.filter((it) =>
+        (it.symbol || "").toLowerCase().includes(qfilter) || (it.name || "").toLowerCase().includes(qfilter)
+      )
+    : items;
+
+  if (!filtered.length) {
     const empty = document.createElement("li");
-    empty.className = "text-gray-500";
-    empty.textContent = "No stocks yet. Add one above.";
+    empty.className = "text-slate-500";
+    empty.textContent = qfilter ? "No matches. Try another search." : "No stocks yet. Add one above.";
     watchlistEl.appendChild(empty);
     return;
   }
 
-  items.forEach((item) => {
+  filtered.forEach((item) => {
     const q = item._quote || null;
     const hasLive = !!q && typeof q.price === "number";
     const li = document.createElement("li");
-    li.className = "border rounded p-4 bg-gray-50";
+    li.className = "rounded-xl border border-slate-200 bg-white p-4 hover:shadow-sm transition";
 
     // Header row
     const top = document.createElement("div");
@@ -286,13 +297,11 @@ function render(items) {
     btns.className = "flex gap-2 shrink-0";
 
     const editBtn = document.createElement("button");
-    editBtn.className =
-      "border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50";
+    editBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition text-slate-700";
     editBtn.textContent = "Edit Notes";
 
     const delBtn = document.createElement("button");
-    delBtn.className =
-      "border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50";
+    delBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition text-red-600";
     delBtn.textContent = "Delete";
 
     btns.appendChild(editBtn);
@@ -313,16 +322,16 @@ function render(items) {
     editRow.className = "hidden mt-3 flex items-center gap-2";
 
     const notesEdit = document.createElement("input");
-    notesEdit.className = "w-full border rounded px-3 py-2";
+    notesEdit.className = "w-full h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200";
     notesEdit.value = item.notes || "";
     notesEdit.placeholder = "Update notes...";
 
     const saveBtn = document.createElement("button");
-    saveBtn.className = "bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700";
+    saveBtn.className = "h-11 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 active:bg-slate-950 transition px-3";
     saveBtn.textContent = "Save";
 
     const cancelBtn = document.createElement("button");
-    cancelBtn.className = "border px-3 py-2 rounded hover:bg-gray-50";
+    cancelBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition";
     cancelBtn.textContent = "Cancel";
 
     editRow.appendChild(notesEdit);
@@ -424,6 +433,7 @@ async function load({ live = true, nocache = false } = {}) {
   if (mainEl) mainEl.setAttribute("aria-busy", "true");
   try {
     const items = await apiGet();
+    lastItems = items;
     if (!live) {
       render(items);
     } else {
@@ -481,6 +491,12 @@ addBtn.addEventListener("click", async () => {
     nameInput.value = "";
     notesInput.value = "";
     showToast("Added to watchlist!", "success");
+    if (formMsgEl) {
+      formMsgEl.textContent = "Added!";
+      formMsgEl.classList.remove("hidden");
+      clearTimeout(formMsgEl._t);
+      formMsgEl._t = setTimeout(() => formMsgEl.classList.add("hidden"), 1500);
+    }
     unlock("firstItem");
     await load();
   } catch (e) {
@@ -590,4 +606,10 @@ saveBackendBtn?.addEventListener("click", () => {
   if (backendUrlInput) backendUrlInput.value = API_BASE;
   showToast("Backend URL saved", "success");
   refresh();
+});
+
+// --- Search filter ---
+searchInput?.addEventListener("input", () => {
+  currentFilter = searchInput.value.trim();
+  render(lastItems.length ? lastItems : []);
 });

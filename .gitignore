@@ -2,3 +2,14 @@ node_modules/
 .DS_Store
 .env
 data/watchlist.json
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+.vscode/
+.idea/
+dist/
+build/
+coverage/
