@@ -78,3 +78,33 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 	- `CORS_ORIGINS` (include my GitHub Pages origin, e.g., `https://Ray19823.github.io`)
 
 Once deployed, set CORS or use same-origin when front-end calls the backend.
+
+## Deliverables Checklist
+- **Interactive App:** Live watchlist with add/edit/delete, simulated prices, and live quotes.
+- **Figma Wireframes:** Low/hi fidelity specs linked above.
+- **Tech Stack:** HTML/CSS (Tailwind CDN) + JavaScript frontend; Express 4 backend.
+- **Front-end Interactivity:** Tabs, auto-refresh, live/simulated badges, achievements, toasts.
+- **Source Management:** Git commits, history cleanup, .gitignore, example data.
+- **APIs:** Yahoo Finance v3 with Alpha Vantage fallback; caching + nocache.
+- **Design & Accessibility:** Skip link, roles/landmarks, labeled inputs, live regions.
+- **Testing Plan:** See below.
+- **Versioned Process:** README and commit history document progress.
+- **Deployment:** Frontend on GitHub Pages; Backend on Render.
+
+## Testing Plan
+- **Watchlist CRUD:** Add, edit notes, delete; verify persistence locally and on Render.
+- **Quotes:** Toggle Live vs Simulated; use `Force fresh` to bypass cache; verify price and timestamp.
+- **Auto-refresh:** Enable and set interval; confirm periodic updates.
+- **Achievements:** Add first item, update notes, use Dev:+1 day to simulate streak progression.
+- **CORS & Pages:** On Pages, set Backend URL to the Render External URL, Save, then Refresh; confirm list loads and CRUD works.
+- **Error Handling:** Try duplicate symbols; observe user-friendly errors.
+- **Fallback API:** With Alpha Vantage key configured on Render, verify quotes still resolve when rate-limited.
+
+## Connecting Pages to Backend
+- Open: https://Ray19823.github.io/FED_Project_StockWatchlist/
+- In the controls row, paste `https://fed-project-stockwatchlist.onrender.com` into “Backend URL (Render)”.
+- Click Save, then Refresh. The watchlist should load from the backend.
+
+## Alpha Vantage Key (Security)
+- Do not commit keys to the repo. In Render → Environment, add `ALPHAVANTAGE_API_KEY` with your key.
+- Redeploy the service to apply.
