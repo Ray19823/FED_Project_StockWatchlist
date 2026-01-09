@@ -71,6 +71,8 @@ const saveBackendBtn = document.getElementById("saveBackend");
 const toast = document.createElement("div");
 toast.className =
   "fixed top-4 right-4 z-50 hidden max-w-sm rounded-lg border bg-white px-4 py-3 shadow";
+toast.setAttribute("role", "status");
+toast.setAttribute("aria-live", "polite");
 document.body.appendChild(toast);
 
 function showToast(text, type = "info") {
@@ -78,16 +80,34 @@ function showToast(text, type = "info") {
   toast.classList.remove("hidden");
 
   toast.classList.remove("border-gray-200", "border-green-200", "border-red-200");
-  if (type === "success") toast.classList.add("border-green-200");
-  else if (type === "error") toast.classList.add("border-red-200");
-  else toast.classList.add("border-gray-200");
+  if (type === "success") {
+    toast.classList.add("border-green-200");
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+  } else if (type === "error") {
+    toast.classList.add("border-red-200");
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("aria-live", "assertive");
+  } else {
+    toast.classList.add("border-gray-200");
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+  }
 
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toast.classList.add("hidden"), 1700);
 }
 
 function setMsg(text = "") {
+  if (!msg) return;
   msg.textContent = text;
+  if (text) {
+    msg.setAttribute("role", "status");
+    msg.setAttribute("aria-live", "polite");
+  } else {
+    msg.removeAttribute("role");
+    msg.removeAttribute("aria-live");
+  }
 }
 
 // --- Achievements state ---
@@ -400,6 +420,8 @@ function startAuto() {
 async function load({ live = true, nocache = false } = {}) {
   setMsg("Loading...");
   currentLiveMode = !!live;
+  const mainEl = document.getElementById("mainContent");
+  if (mainEl) mainEl.setAttribute("aria-busy", "true");
   try {
     const items = await apiGet();
     if (!live) {
@@ -432,6 +454,9 @@ async function load({ live = true, nocache = false } = {}) {
   } catch (e) {
     setMsg("Failed to load watchlist.");
     showToast(e.message, "error");
+  } finally {
+    const mainEl2 = document.getElementById("mainContent");
+    if (mainEl2) mainEl2.setAttribute("aria-busy", "false");
   }
 }
 
@@ -506,6 +531,8 @@ function showTab(tab) {
     tabAchievements?.classList.remove("border");
     tabWatchlist?.classList.remove("bg-blue-600","text-white");
     tabWatchlist?.classList.add("border");
+    tabAchievements?.setAttribute("aria-selected", "true");
+    tabWatchlist?.setAttribute("aria-selected", "false");
     renderAchievements();
   } else {
     watchlistSection.classList.remove("hidden");
@@ -514,6 +541,8 @@ function showTab(tab) {
     tabWatchlist?.classList.remove("border");
     tabAchievements?.classList.remove("bg-blue-600","text-white");
     tabAchievements?.classList.add("border");
+    tabWatchlist?.setAttribute("aria-selected", "true");
+    tabAchievements?.setAttribute("aria-selected", "false");
   }
 }
 

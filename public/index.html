@@ -8,12 +8,14 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-  <main class="max-w-3xl mx-auto p-6">
+  <!-- Skip link for keyboard users -->
+  <a href="#mainContent" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 bg-white border rounded px-3 py-2 shadow">Skip to main content</a>
+  <main class="max-w-3xl mx-auto p-6" id="mainContent" role="main" aria-busy="false">
     
     <!-- Simple Tabs -->
-    <nav class="mb-6 flex items-center gap-2" aria-label="Sections">
-      <button id="tabWatchlist" class="px-3 py-2 rounded bg-blue-600 text-white">Watchlist</button>
-      <button id="tabAchievements" class="px-3 py-2 rounded border">Achievements</button>
+    <nav class="mb-6 flex items-center gap-2" aria-label="Sections" role="tablist">
+      <button id="tabWatchlist" class="px-3 py-2 rounded bg-blue-600 text-white" role="tab" aria-selected="true" aria-controls="watchlistSection">Watchlist</button>
+      <button id="tabAchievements" class="px-3 py-2 rounded border" role="tab" aria-selected="false" aria-controls="achievementsSection">Achievements</button>
     </nav>
 
     <!-- Header -->
@@ -29,29 +31,33 @@
       <h2 class="text-xl font-semibold mb-4">Add Stock</h2>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <input
-          id="symbolInput"
-          type="text"
-          placeholder="Symbol (e.g. AAPL)"
-          aria-label="Stock symbol"
-          class="border rounded px-3 py-2 focus:outline-none focus:ring"
-        />
-
-        <input
-          id="nameInput"
-          type="text"
-          placeholder="Company name"
-          aria-label="Company name"
-          class="border rounded px-3 py-2 focus:outline-none focus:ring"
-        />
-
-        <input
-          id="notesInput"
-          type="text"
-          placeholder="Notes"
-          aria-label="Notes"
-          class="border rounded px-3 py-2 focus:outline-none focus:ring"
-        />
+        <div>
+          <label for="symbolInput" class="sr-only">Stock symbol</label>
+          <input
+            id="symbolInput"
+            type="text"
+            placeholder="Symbol (e.g. AAPL)"
+            class="border rounded px-3 py-2 focus:outline-none focus:ring"
+          />
+        </div>
+        <div>
+          <label for="nameInput" class="sr-only">Company name</label>
+          <input
+            id="nameInput"
+            type="text"
+            placeholder="Company name"
+            class="border rounded px-3 py-2 focus:outline-none focus:ring"
+          />
+        </div>
+        <div>
+          <label for="notesInput" class="sr-only">Notes</label>
+          <input
+            id="notesInput"
+            type="text"
+            placeholder="Notes"
+            class="border rounded px-3 py-2 focus:outline-none focus:ring"
+          />
+        </div>
       </div>
 
       <button
@@ -65,10 +71,10 @@
     </section>
 
     <!-- Watchlist -->
-    <section id="watchlistSection" class="bg-white rounded-lg shadow p-6">
+    <section id="watchlistSection" class="bg-white rounded-lg shadow p-6" role="tabpanel" aria-labelledby="watchlistHeading">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold">Your Watchlist</h2>
-        <div class="flex flex-wrap items-center gap-2">
+        <h2 id="watchlistHeading" class="text-xl font-semibold">Your Watchlist</h2>
+        <fieldset class="flex flex-wrap items-center gap-2" aria-label="Watchlist controls">
           <label class="flex items-center gap-2 text-sm">
             <input type="checkbox" id="liveToggle" class="accent-blue-600" checked />
             <span>Live Quotes</span>
@@ -89,26 +95,28 @@
           <button
             id="refreshBtn"
             class="border px-3 py-2 rounded hover:bg-gray-50"
+            type="button"
           >
             Refresh
           </button>
-          <span id="status" class="ml-2 text-xs text-gray-600"></span>
+          <span id="status" class="ml-2 text-xs text-gray-600" role="status" aria-live="polite"></span>
           <!-- Dev controls for demo -->
-          <button id="devAdvanceDay" class="ml-2 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Simulate next day to increment streak">Dev: +1 day</button>
-          <button id="devResetAch" class="ml-1 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Clear achievements">Reset</button>
+          <button id="devAdvanceDay" class="ml-2 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Simulate next day to increment streak" type="button">Dev: +1 day</button>
+          <button id="devResetAch" class="ml-1 text-xs border px-2 py-1 rounded hover:bg-gray-50" title="Clear achievements" type="button">Reset</button>
           <!-- Backend URL for GitHub Pages -->
-            <input id="backendUrl" type="url" placeholder="Backend URL (Render)" aria-label="Backend URL" class="ml-2 border rounded px-2 py-1 text-xs w-64" />
-          <button id="saveBackend" class="text-xs border px-2 py-1 rounded hover:bg-gray-50">Save</button>
-        </div>
+            <label for="backendUrl" class="sr-only">Backend URL (Render)</label>
+            <input id="backendUrl" type="url" placeholder="Backend URL (Render)" class="ml-2 border rounded px-2 py-1 text-xs w-64" />
+          <button id="saveBackend" class="text-xs border px-2 py-1 rounded hover:bg-gray-50" type="button">Save</button>
+        </fieldset>
       </div>
 
       <ul id="watchlist" class="space-y-3"></ul>
     </section>
 
     <!-- Achievements -->
-    <section id="achievementsSection" class="bg-white rounded-lg shadow p-6 hidden">
+    <section id="achievementsSection" class="bg-white rounded-lg shadow p-6 hidden" role="tabpanel" aria-labelledby="achievementsHeading">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold">Achievements</h2>
+        <h2 id="achievementsHeading" class="text-xl font-semibold">Achievements</h2>
         <div class="text-sm text-gray-600">Streak: <span id="streakCount" class="font-semibold">0</span> days</div>
       </div>
       <div id="badges" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
