@@ -50,10 +50,10 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 	- Windows (PowerShell): `Copy-Item data/watchlist.example.json data/watchlist.json`
 - Alternatively, just add a stock in the UI and the file will be created automatically.
 
-## Submission Links (fill in before submission)
-- Figma Prototype: [Add your Figma URL here]
-- GitHub Pages (Frontend): [https://<username>.github.io/<NameOfApp>]
-- Live Backend (Server/Serverless): [https://<name>-app.onrender.com]
+## Submission Links 
+- Figma Prototype: https://www.figma.com/design/4cflDpcaFhl7MQE4OiwQtI/FED-–-Stock-Watchlist-App?node-id=0-1&p=f&t=RV0dmdlZoJu9Bx1n-0
+- GitHub Pages (Frontend): [https://Ray19823.github.io/FED_Project_StockWatchlist/]
+- Live Backend (Server/Serverless): [https://fed-project-stockwatchlist.onrender.com]
 
  See design brief at [docs/design/figma-brief.md](docs/design/figma-brief.md) and hi-fi specs at
  [docs/design/hifi-desktop.md](docs/design/hifi-desktop.md) and [docs/design/hifi-mobile.md](docs/design/hifi-mobile.md). Achievements spec: [docs/design/achievements.md](docs/design/achievements.md).
@@ -62,9 +62,10 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 
 ### GitHub Pages (Frontend)
 - Install tooling: `npm install --save-dev gh-pages`
-- Add script: `deploy:pages` to publish the `public/` folder (already configured below).
-- Deploy: `npm run deploy:pages` — this creates/updates the `gh-pages` branch.
-- In GitHub repo settings → Pages: Source = `gh-pages` branch.
+- Add script: `deploy:pages` to publish the `public/` folder (already configured).
+- Deploy: `npm run deploy:pages` — creates/updates the `gh-pages` branch.
+- Settings → Pages: Source = `gh-pages` branch.
+- On Ray19823.github.io, the app auto-uses the Render URL; can still override via the Backend URL field.
 
 ### Render (Backend)
 - Render auto-detects Node apps. Use the included `render.yaml` or create a Web Service from the repo.
@@ -74,5 +75,6 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 	- `PORT` (provided by Render)
 	- `QUOTES_TTL_MS` (e.g., `300000` default 5 minutes; `0` for dev)
 	- `ALPHAVANTAGE_API_KEY` (optional fallback provider)
+	- `CORS_ORIGINS` (include my GitHub Pages origin, e.g., `https://Ray19823.github.io`)
 
 Once deployed, set CORS or use same-origin when front-end calls the backend.
