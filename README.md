@@ -6,7 +6,7 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
  - Data persistence is handled using a JSON file (`data/watchlist.json`) to simulate a database.
 	 - For version control hygiene, do not commit personal data: `data/watchlist.json` is git-ignored.
 	 - Use the provided `data/watchlist.example.json` (empty array) and copy it to `data/watchlist.json` locally.
-	 - On first run without a file, the app will operate with an empty list and write to `data/watchlist.json` when you add items.
+	 - On first run without a file, the app will operate with an empty list and write to `data/watchlist.json` when items are added.
 - The app can fetch live quotes using Yahoo Finance (server-side) with Alpha Vantage fallback.
 - This approach allows rapid prototyping and optional API-key usage.
 - The architecture supports easy migration to a real database or external stock API in future iterations.
@@ -31,7 +31,7 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 
 ### SGX Tickers
 - SGX symbols typically use the `.SI` suffix (e.g., `D05.SI`, `Z74.SI`, `O39.SI`, `U11.SI`).
-- You can add these symbols to the watchlist or query them directly via `/api/quotes`.
+- I can add these symbols to the watchlist or query them directly via `/api/quotes`.
 
 ### Frontend Behavior
 - The UI loads the watchlist and then fetches live quotes via `/api/quotes` for those symbols.
@@ -106,5 +106,5 @@ Once deployed, set CORS or use same-origin when front-end calls the backend.
 - Click Save, then Refresh. The watchlist should load from the backend.
 
 ## Alpha Vantage Key (Security)
-- Do not commit keys to the repo. In Render → Environment, add `ALPHAVANTAGE_API_KEY` with your key.
+- Do not commit keys to the repo. In Render → Environment, add `ALPHAVANTAGE_API_KEY` with my key.
 - Redeploy the service to apply.
