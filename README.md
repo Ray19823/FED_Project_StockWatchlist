@@ -55,4 +55,5 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 - GitHub Pages (Frontend): [https://<username>.github.io/<NameOfApp>]
 - Live Backend (Server/Serverless): [https://<name>-app.onrender.com]
 
-See design brief at [docs/design/figma-brief.md](docs/design/figma-brief.md).
+ See design brief at [docs/design/figma-brief.md](docs/design/figma-brief.md) and hi-fi specs at
+ [docs/design/hifi-desktop.md](docs/design/hifi-desktop.md) and [docs/design/hifi-mobile.md](docs/design/hifi-mobile.md).
