@@ -49,3 +49,10 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 	- macOS/Linux: `cp data/watchlist.example.json data/watchlist.json`
 	- Windows (PowerShell): `Copy-Item data/watchlist.example.json data/watchlist.json`
 - Alternatively, just add a stock in the UI and the file will be created automatically.
+
+## Submission Links (fill in before submission)
+- Figma Prototype: [Add your Figma URL here]
+- GitHub Pages (Frontend): [https://<username>.github.io/<NameOfApp>]
+- Live Backend (Server/Serverless): [https://<name>-app.onrender.com]
+
+See design brief at [docs/design/figma-brief.md](docs/design/figma-brief.md).
