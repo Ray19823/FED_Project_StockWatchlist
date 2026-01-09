@@ -46,6 +46,7 @@ function url(p) { return `${API_BASE}${p}`; }
 let currentLiveMode = true;
 let currentFilter = "";
 let lastItems = [];
+let isCompact = false;
 const watchlistEl = document.getElementById("watchlist");
 const watchlistSection = document.getElementById("watchlistSection");
 const achievementsSection = document.getElementById("achievementsSection");
@@ -70,11 +71,14 @@ const backendUrlInput = document.getElementById("backendUrl");
 const saveBackendBtn = document.getElementById("saveBackend");
 const searchInput = document.getElementById("search");
 const formMsgEl = document.getElementById("formMsg");
+const compactToggle = document.getElementById("compactToggle");
+const toggleTheme = document.getElementById("toggleTheme");
+const healthIndicator = document.getElementById("healthIndicator");
 
 // Toast (subtle)
 const toast = document.createElement("div");
 toast.className =
-  "fixed top-4 right-4 z-50 hidden max-w-sm rounded-lg border bg-white px-4 py-3 shadow";
+  "fixed top-4 right-4 z-50 hidden max-w-sm rounded-lg border bg-white px-4 py-3 shadow dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100";
 toast.setAttribute("role", "status");
 toast.setAttribute("aria-live", "polite");
 document.body.appendChild(toast);
@@ -112,6 +116,38 @@ function setMsg(text = "") {
     msg.removeAttribute("role");
     msg.removeAttribute("aria-live");
   }
+}
+
+// --- UI (Theme + Compact) ---
+function initUI() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("sw:ui") || "{}");
+    if (saved.theme === "dark") {
+      document.documentElement.classList.add("dark");
+      toggleTheme?.setAttribute("aria-pressed", "true");
+    }
+    isCompact = !!saved.compact;
+    if (compactToggle) compactToggle.checked = isCompact;
+  } catch {}
+}
+
+function onToggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.classList.toggle("dark");
+  toggleTheme?.setAttribute("aria-pressed", isDark ? "true" : "false");
+  persistUI(isDark ? "dark" : "light");
+}
+
+function persistUI(themeOverride) {
+  try {
+    const saved = JSON.parse(localStorage.getItem("sw:ui") || "{}");
+    const next = {
+      ...saved,
+      compact: isCompact,
+      theme: themeOverride || saved.theme || (document.documentElement.classList.contains("dark") ? "dark" : "light"),
+    };
+    localStorage.setItem("sw:ui", JSON.stringify(next));
+  } catch {}
 }
 
 // --- Achievements state ---
@@ -240,7 +276,7 @@ function render(items) {
 
   if (!filtered.length) {
     const empty = document.createElement("li");
-    empty.className = "text-slate-500";
+    empty.className = "text-slate-500 dark:text-slate-300";
     empty.textContent = qfilter ? "No matches. Try another search." : "No stocks yet. Add one above.";
     watchlistEl.appendChild(empty);
     return;
@@ -250,7 +286,8 @@ function render(items) {
     const q = item._quote || null;
     const hasLive = !!q && typeof q.price === "number";
     const li = document.createElement("li");
-    li.className = "rounded-xl border border-slate-200 bg-white p-4 hover:shadow-sm transition";
+    const baseRow = "rounded-xl border border-slate-200 bg-white hover:shadow-sm transition dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 dark:text-slate-100";
+    li.className = `${baseRow} ${isCompact ? "p-3 text-sm" : "p-4"}`;
 
     // Header row
     const top = document.createElement("div");
@@ -260,12 +297,12 @@ function render(items) {
 
     // Symbol + name
     const title = document.createElement("div");
-    title.className = "text-lg font-semibold";
+    title.className = isCompact ? "text-base font-semibold" : "text-lg font-semibold";
     title.textContent = `${item.symbol}${item.name ? " — " + item.name : ""}`;
 
     // Price + timestamp (live preferred)
     const meta = document.createElement("div");
-    meta.className = "text-sm text-gray-600 mt-1";
+    meta.className = `${isCompact ? "text-xs" : "text-sm"} text-gray-600 mt-1 dark:text-slate-300`;
     const priceNum = hasLive ? q.price : (typeof item.lastPrice === "number" ? item.lastPrice : null);
     const currency = hasLive ? (q.currency || "") : "";
     const priceTxt = priceNum != null ? priceNum.toFixed(2) : "—";
@@ -297,11 +334,11 @@ function render(items) {
     btns.className = "flex gap-2 shrink-0";
 
     const editBtn = document.createElement("button");
-    editBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition text-slate-700";
+    editBtn.className = `${isCompact ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm"} rounded-lg border border-slate-200 hover:bg-slate-50 transition text-slate-700 dark:border-slate-700 dark:hover:bg-slate-700 dark:text-slate-100`;
     editBtn.textContent = "Edit Notes";
 
     const delBtn = document.createElement("button");
-    delBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition text-red-600";
+    delBtn.className = `${isCompact ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm"} rounded-lg border border-slate-200 hover:bg-slate-50 transition text-red-600 dark:border-slate-700 dark:hover:bg-slate-700`;
     delBtn.textContent = "Delete";
 
     btns.appendChild(editBtn);
@@ -316,13 +353,15 @@ function render(items) {
     notesView.innerHTML = `<span class="font-medium">Notes:</span> <span class="text-gray-700">${escapeHtml(
       item.notes || "(none)"
     )}</span>`;
+    // Add dark text color
+    notesView.querySelector("span:last-child")?.classList.add("dark:text-slate-200");
 
     // Inline edit area (hidden)
     const editRow = document.createElement("div");
     editRow.className = "hidden mt-3 flex items-center gap-2";
 
     const notesEdit = document.createElement("input");
-    notesEdit.className = "w-full h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200";
+    notesEdit.className = "w-full h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 dark:bg-slate-800 dark:border-slate-700";
     notesEdit.value = item.notes || "";
     notesEdit.placeholder = "Update notes...";
 
@@ -331,7 +370,7 @@ function render(items) {
     saveBtn.textContent = "Save";
 
     const cancelBtn = document.createElement("button");
-    cancelBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition";
+    cancelBtn.className = "px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-700 dark:text-slate-100";
     cancelBtn.textContent = "Cancel";
 
     editRow.appendChild(notesEdit);
@@ -534,6 +573,14 @@ forceFresh.addEventListener("change", () => {
   if (autoToggle.checked) startAuto();
 });
 
+// Compact + Theme toggles
+compactToggle?.addEventListener("change", () => {
+  isCompact = !!compactToggle.checked;
+  persistUI();
+  render(lastItems.length ? lastItems : []);
+});
+toggleTheme?.addEventListener("click", onToggleTheme);
+
 // Initial load in live mode
 load({ live: true, nocache: false });
 
@@ -594,6 +641,8 @@ function syncBackendInput() {
   }
 }
 syncBackendInput();
+initUI();
+checkHealth();
 saveBackendBtn?.addEventListener("click", () => {
   let val = (backendUrlInput?.value || "").trim();
   const norm = normalizeBase(val);
@@ -605,6 +654,7 @@ saveBackendBtn?.addEventListener("click", () => {
   try { localStorage.setItem("API_BASE", API_BASE); } catch {}
   if (backendUrlInput) backendUrlInput.value = API_BASE;
   showToast("Backend URL saved", "success");
+  checkHealth();
   refresh();
 });
 
@@ -613,3 +663,25 @@ searchInput?.addEventListener("input", () => {
   currentFilter = searchInput.value.trim();
   render(lastItems.length ? lastItems : []);
 });
+
+// --- Health indicator ---
+async function checkHealth() {
+  if (!healthIndicator) return;
+  try {
+    const res = await fetch(url("/api/health"));
+    if (!res.ok) throw new Error("bad status");
+    const data = await res.json();
+    const enabled = !!data.alphaEnabled;
+    healthIndicator.textContent = enabled ? "Alpha Key: On" : "Alpha Key: Off";
+    healthIndicator.classList.remove("bg-slate-100","text-slate-700","bg-rose-50","text-rose-700","bg-emerald-50","text-emerald-700");
+    if (enabled) {
+      healthIndicator.classList.add("bg-emerald-50","text-emerald-700");
+    } else {
+      healthIndicator.classList.add("bg-rose-50","text-rose-700");
+    }
+  } catch (e) {
+    healthIndicator.textContent = "Alpha Key: Unknown";
+    healthIndicator.classList.remove("bg-emerald-50","text-emerald-700","bg-rose-50","text-rose-700");
+    healthIndicator.classList.add("bg-slate-100","text-slate-700");
+  }
+}

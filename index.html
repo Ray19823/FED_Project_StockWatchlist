@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stock Watchlist</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Enable class-based dark mode so we can toggle
+    tailwind.config = { darkMode: 'class' };
+  </script>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800">
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 dark:text-slate-100">
   <!-- Skip link for keyboard users -->
   <a href="#mainContent" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 bg-white border rounded px-3 py-2 shadow">Skip to main content</a>
   <main class="max-w-3xl mx-auto p-6" id="mainContent" role="main" aria-busy="false">
@@ -25,28 +29,30 @@
         <p class="text-sm text-slate-500 mt-1">Track symbols, notes, and prices — fast and simple.</p>
       </div>
 
-      <div class="flex flex-wrap gap-2 justify-end">
+      <div class="flex flex-wrap gap-2 justify-end items-center">
         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Simulated API (JSON)</span>
         <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">Live Ready</span>
+        <span id="healthIndicator" class="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">Alpha Key: Unknown</span>
+        <button id="toggleTheme" class="text-xs px-3 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-800" type="button" aria-pressed="false">Dark</button>
       </div>
     </header>
 
     <!-- Add Stock -->
-    <section class="w-full max-w-4xl rounded-2xl bg-white/90 backdrop-blur border border-slate-200 shadow-sm p-6 md:p-8 mb-6">
+    <section class="w-full max-w-4xl rounded-2xl bg-white/90 backdrop-blur border border-slate-200 shadow-sm p-6 md:p-8 mb-6 dark:bg-slate-900/70 dark:border-slate-700 dark:shadow-none">
       <h2 class="text-xl font-semibold mb-4">Add Stock</h2>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label for="symbolInput" class="sr-only">Stock symbol</label>
-          <input id="symbolInput" type="text" placeholder="Symbol (e.g. AAPL)" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300" />
+          <input id="symbolInput" type="text" placeholder="Symbol (e.g. AAPL)" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-slate-700" />
         </div>
         <div>
           <label for="nameInput" class="sr-only">Company name</label>
-          <input id="nameInput" type="text" placeholder="Company name" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300" />
+          <input id="nameInput" type="text" placeholder="Company name" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-slate-700" />
         </div>
         <div>
           <label for="notesInput" class="sr-only">Notes</label>
-          <input id="notesInput" type="text" placeholder="Notes" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300" />
+          <input id="notesInput" type="text" placeholder="Notes" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 focus:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-slate-700" />
         </div>
       </div>
 
@@ -57,7 +63,7 @@
     </section>
 
     <!-- Watchlist -->
-    <section id="watchlistSection" class="w-full max-w-4xl rounded-2xl bg-white/90 backdrop-blur border border-slate-200 shadow-sm p-6 md:p-8" role="tabpanel" aria-labelledby="watchlistHeading">
+    <section id="watchlistSection" class="w-full max-w-4xl rounded-2xl bg-white/90 backdrop-blur border border-slate-200 shadow-sm p-6 md:p-8 dark:bg-slate-900/70 dark:border-slate-700 dark:shadow-none" role="tabpanel" aria-labelledby="watchlistHeading">
       <div class="flex items-center justify-between mb-4">
         <h2 id="watchlistHeading" class="text-xl font-semibold">Your Watchlist</h2>
         <fieldset class="flex flex-wrap items-center gap-2" aria-label="Watchlist controls">
@@ -74,6 +80,10 @@
             <option value="30000" selected>30s</option>
             <option value="60000">60s</option>
           </select>
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="compactToggle" class="accent-blue-600" />
+            <span>Compact</span>
+          </label>
           <label class="flex items-center gap-2 text-xs text-gray-600">
             <input type="checkbox" id="forceFresh" class="accent-blue-600" />
             <span>Force fresh (dev)</span>
