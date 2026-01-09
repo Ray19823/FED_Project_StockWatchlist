@@ -1,12 +1,42 @@
+function isValidUrl(s) {
+  try {
+    new URL(s);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeBase(s) {
+  if (!s) return "";
+  let v = String(s).trim();
+  if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  // drop trailing slash
+  v = v.replace(/\/$/, "");
+  return isValidUrl(v) ? v : "";
+}
+
 function getApiBase() {
   // Allow override via localStorage or global
   const ls = (typeof localStorage !== "undefined") ? localStorage.getItem("API_BASE") : "";
-  if (ls && typeof ls === "string") return ls.trim();
-  if (typeof window !== "undefined" && window.API_BASE && typeof window.API_BASE === "string") return window.API_BASE.trim();
+  if (ls && typeof ls === "string") {
+    const norm = normalizeBase(ls);
+    if (norm) return norm;
+    try { localStorage.removeItem("API_BASE"); } catch {}
+  }
+  if (typeof window !== "undefined" && window.API_BASE && typeof window.API_BASE === "string") {
+    const norm = normalizeBase(window.API_BASE);
+    if (norm) return norm;
+  }
   const host = (typeof location !== "undefined") ? location.hostname.toLowerCase() : "";
   // Local dev: use same origin
   if (host === "localhost" || host === "127.0.0.1") return "";
-  // GitHub Pages or other static host: default empty (requires user to set Backend URL)
+  // GitHub Pages: auto-default to your Render URL if present
+  if (host.includes("ray19823.github.io")) {
+    return "https://fed-project-stockwatchlist.onrender.com";
+  }
+  // Other static hosts: default empty (user sets Backend URL)
   return "";
 }
 let API_BASE = getApiBase();
@@ -520,9 +550,15 @@ function syncBackendInput() {
 }
 syncBackendInput();
 saveBackendBtn?.addEventListener("click", () => {
-  const val = (backendUrlInput?.value || "").trim();
-  API_BASE = val;
+  let val = (backendUrlInput?.value || "").trim();
+  const norm = normalizeBase(val);
+  if (!norm) {
+    showToast("Enter a valid URL, e.g. https://fed-project-stockwatchlist.onrender.com", "error");
+    return;
+  }
+  API_BASE = norm;
   try { localStorage.setItem("API_BASE", API_BASE); } catch {}
+  if (backendUrlInput) backendUrlInput.value = API_BASE;
   showToast("Backend URL saved", "success");
   refresh();
 });
