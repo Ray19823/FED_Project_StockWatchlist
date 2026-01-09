@@ -1,4 +1,5 @@
 const API = "/api/watchlist";
+const QUOTES_API = "/api/quotes";
 
 // Elements
 const watchlistEl = document.getElementById("watchlist");
@@ -81,6 +82,8 @@ function render(items) {
   }
 
   items.forEach((item) => {
+    const q = item._quote || null;
+    const hasLive = !!q && typeof q.price === "number";
     const li = document.createElement("li");
     li.className = "border rounded p-4 bg-gray-50";
 
@@ -95,12 +98,30 @@ function render(items) {
     title.className = "text-lg font-semibold";
     title.textContent = `${item.symbol}${item.name ? " — " + item.name : ""}`;
 
-    // Price + timestamp (simulated)
+    // Price + timestamp (live preferred)
     const meta = document.createElement("div");
     meta.className = "text-sm text-gray-600 mt-1";
-    const price = typeof item.lastPrice === "number" ? item.lastPrice.toFixed(2) : "—";
-    const time = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : "";
-    meta.textContent = `Price: $${price}${time ? " • Updated: " + time : ""}`;
+    const priceNum = hasLive ? q.price : (typeof item.lastPrice === "number" ? item.lastPrice : null);
+    const currency = hasLive ? (q.currency || "") : "";
+    const priceTxt = priceNum != null ? priceNum.toFixed(2) : "—";
+    const timeIso = hasLive ? q.updatedAt : item.updatedAt;
+    const time = timeIso ? new Date(timeIso).toLocaleString() : "";
+    const change = hasLive ? q.change : null;
+    const changePct = hasLive ? q.changePercent : null;
+
+    const changeColor = change != null && changePct != null
+      ? (change >= 0 ? "text-green-600" : "text-red-600")
+      : "text-gray-600";
+
+    meta.innerHTML = `
+      <span>Price: ${currency ? `<span>${currency}</span>` : ""} <span class="font-medium">${priceTxt}</span></span>
+      ${change != null && changePct != null ? `
+        <span class="mx-1">•</span>
+        <span class="${changeColor}">${change.toFixed(2)} (${changePct.toFixed(2)}%)</span>
+      ` : ""}
+      ${time ? `<span class="mx-1">•</span><span>Updated: ${time}</span>` : ""}
+      ${hasLive ? `<span class="ml-2 inline-block text-xs text-blue-600">live</span>` : ""}
+    `;
 
     left.appendChild(title);
     left.appendChild(meta);
@@ -228,7 +249,23 @@ async function load() {
   setMsg("Loading...");
   try {
     const items = await apiGet();
-    render(items);
+    const symbols = items.map((x) => x.symbol).filter(Boolean);
+    let quotes = [];
+    try {
+      if (symbols.length) {
+        const res = await fetch(`${QUOTES_API}?symbols=${encodeURIComponent(symbols.join(","))}`);
+        if (res.ok) {
+          const data = await res.json();
+          quotes = Array.isArray(data.quotes) ? data.quotes : [];
+        }
+      }
+    } catch (e) {
+      // Ignore quote fetch errors; fallback to simulated prices
+    }
+
+    const bySym = new Map(quotes.map((q) => [q.symbol, q]));
+    const merged = items.map((it) => ({ ...it, _quote: bySym.get(it.symbol) }));
+    render(merged);
     setMsg("");
   } catch (e) {
     setMsg("Failed to load watchlist.");

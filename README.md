@@ -28,3 +28,7 @@ The backend is built using Node.js and Express, exposing a RESTful API that mana
 ### SGX Tickers
 - SGX symbols typically use the `.SI` suffix (e.g., `D05.SI`, `Z74.SI`, `O39.SI`, `U11.SI`).
 - You can add these symbols to the watchlist or query them directly via `/api/quotes`.
+
+### Frontend Behavior
+- The UI loads the watchlist and then fetches live quotes via `/api/quotes` for those symbols.
+- If a quote is available, price, currency, change and timestamp are shown with a "live" indicator; otherwise simulated prices are displayed.
