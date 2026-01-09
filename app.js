@@ -67,7 +67,10 @@ function simulatePrice(price) {
 }
 
 // ---------- Routes ----------
-app.get("/api/health", (req, res) => res.json({ ok: true }));
+app.get("/api/health", (req, res) => {
+  const alphaEnabled = !!process.env.ALPHAVANTAGE_API_KEY;
+  res.json({ ok: true, alphaEnabled });
+});
 
 // GET all watchlist items (with simulated price movement)
 app.get("/api/watchlist", (req, res) => {
