@@ -9,6 +9,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = path.join(__dirname, "data", "watchlist.json");
+const { getQuotes } = require(path.join(__dirname, "services", "quotes.js"));
 
 // ---------- Helpers ----------
 function readWatchlist() {
@@ -53,6 +54,25 @@ app.get("/api/watchlist", (req, res) => {
   saveWatchlist(updated);
 
   res.json(updated);
+});
+
+// GET quotes: /api/quotes?symbols=AAPL,MSFT or default to current watchlist symbols
+app.get("/api/quotes", async (req, res) => {
+  try {
+    let symbols = [];
+    const q = (req.query.symbols || "").trim();
+    if (q) {
+      symbols = q.split(",").map((s) => s.trim()).filter(Boolean);
+    } else {
+      const list = readWatchlist();
+      symbols = list.map((x) => x.symbol).filter(Boolean);
+    }
+
+    const results = await getQuotes(symbols);
+    res.json({ symbols: symbols.map((s) => s.toUpperCase()), quotes: results });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch quotes" });
+  }
 });
 
 // POST add new stock
