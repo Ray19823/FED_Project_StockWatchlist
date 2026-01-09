@@ -1,5 +1,16 @@
-const API = "/api/watchlist";
-const QUOTES_API = "/api/quotes";
+function getApiBase() {
+  // Allow override via localStorage or global
+  const ls = (typeof localStorage !== "undefined") ? localStorage.getItem("API_BASE") : "";
+  if (ls && typeof ls === "string") return ls.trim();
+  if (typeof window !== "undefined" && window.API_BASE && typeof window.API_BASE === "string") return window.API_BASE.trim();
+  const host = (typeof location !== "undefined") ? location.hostname.toLowerCase() : "";
+  // Local dev: use same origin
+  if (host === "localhost" || host === "127.0.0.1") return "";
+  // GitHub Pages or other static host: default empty (requires user to set Backend URL)
+  return "";
+}
+let API_BASE = getApiBase();
+function url(p) { return `${API_BASE}${p}`; }
 
 // Elements
 let currentLiveMode = true;
@@ -21,6 +32,10 @@ const msg = document.getElementById("msg");
 const statusEl = document.getElementById("status");
 const badgesEl = document.getElementById("badges");
 const streakCountEl = document.getElementById("streakCount");
+const devAdvanceDayBtn = document.getElementById("devAdvanceDay");
+const devResetAchBtn = document.getElementById("devResetAch");
+const backendUrlInput = document.getElementById("backendUrl");
+const saveBackendBtn = document.getElementById("saveBackend");
 
 // Toast (subtle)
 const toast = document.createElement("div");
@@ -124,13 +139,13 @@ function renderAchievements() {
 
 // --- API Helpers ---
 async function apiGet() {
-  const res = await fetch(API);
+  const res = await fetch(url("/api/watchlist"));
   if (!res.ok) throw new Error("Failed to load watchlist");
   return res.json();
 }
 
 async function apiPost(payload) {
-  const res = await fetch(API, {
+  const res = await fetch(url("/api/watchlist"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -141,7 +156,7 @@ async function apiPost(payload) {
 }
 
 async function apiPut(id, payload) {
-  const res = await fetch(`${API}/${id}`, {
+  const res = await fetch(url(`/api/watchlist/${id}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -152,7 +167,7 @@ async function apiPut(id, payload) {
 }
 
 async function apiDelete(id) {
-  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+  const res = await fetch(url(`/api/watchlist/${id}`), { method: "DELETE" });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to delete stock");
   return data;
@@ -366,7 +381,7 @@ async function load({ live = true, nocache = false } = {}) {
         if (symbols.length) {
           const qs = new URLSearchParams({ symbols: symbols.join(",") });
           if (nocache) qs.set("nocache", "1");
-          const res = await fetch(`${QUOTES_API}?${qs.toString()}`);
+          const res = await fetch(url(`/api/quotes?${qs.toString()}`));
           if (res.ok) {
             const data = await res.json();
             quotes = Array.isArray(data.quotes) ? data.quotes : [];
@@ -475,3 +490,39 @@ function showTab(tab) {
 tabWatchlist?.addEventListener("click", () => showTab("watchlist"));
 tabAchievements?.addEventListener("click", () => showTab("achievements"));
 showTab("watchlist");
+
+// --- Dev controls ---
+devAdvanceDayBtn?.addEventListener("click", () => {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  setLastDate(yesterday.toISOString());
+  bumpStreak();
+  renderAchievements();
+  showToast("Simulated next day: streak updated", "success");
+});
+
+devResetAchBtn?.addEventListener("click", () => {
+  localStorage.removeItem(LS_ACH);
+  localStorage.removeItem(LS_STREAK);
+  localStorage.removeItem(LS_LAST);
+  renderAchievements();
+  showToast("Achievements reset", "success");
+});
+
+// --- Backend URL controls ---
+function syncBackendInput() {
+  if (!backendUrlInput) return;
+  backendUrlInput.value = API_BASE || "";
+  if (!API_BASE && location.hostname.toLowerCase().includes("github.io")) {
+    showToast("Tip: set Backend URL (Render) for live site", "info");
+  }
+}
+syncBackendInput();
+saveBackendBtn?.addEventListener("click", () => {
+  const val = (backendUrlInput?.value || "").trim();
+  API_BASE = val;
+  try { localStorage.setItem("API_BASE", API_BASE); } catch {}
+  showToast("Backend URL saved", "success");
+  refresh();
+});
