@@ -3,6 +3,10 @@
 The backend is built using Node.js and Express, exposing a RESTful API that manages a stock watchlist.
 
 - Data persistence is handled using a JSON file (`data/watchlist.json`) to simulate a database.
+ - Data persistence is handled using a JSON file (`data/watchlist.json`) to simulate a database.
+	 - For version control hygiene, do not commit personal data: `data/watchlist.json` is git-ignored.
+	 - Use the provided `data/watchlist.example.json` (empty array) and copy it to `data/watchlist.json` locally.
+	 - On first run without a file, the app will operate with an empty list and write to `data/watchlist.json` when you add items.
 - The app can fetch live quotes using Yahoo Finance (server-side) with Alpha Vantage fallback.
 - This approach allows rapid prototyping and optional API-key usage.
 - The architecture supports easy migration to a real database or external stock API in future iterations.
