@@ -2,6 +2,7 @@ const API = "/api/watchlist";
 const QUOTES_API = "/api/quotes";
 
 // Elements
+let currentLiveMode = true;
 const watchlistEl = document.getElementById("watchlist");
 const symbolInput = document.getElementById("symbolInput");
 const nameInput = document.getElementById("nameInput");
@@ -125,6 +126,7 @@ function render(items) {
       ` : ""}
       ${time ? `<span class="mx-1">•</span><span>Updated: ${time}</span>` : ""}
       ${hasLive ? `<span class="ml-2 inline-block text-xs text-blue-600">live</span>` : ""}
+      ${!currentLiveMode ? `<span class="ml-2 inline-block text-xs text-gray-600">simulated</span>` : ""}
     `;
 
     left.appendChild(title);
@@ -267,6 +269,7 @@ function startAuto() {
 // --- Load/Refresh ---
 async function load({ live = true, nocache = false } = {}) {
   setMsg("Loading...");
+  currentLiveMode = !!live;
   try {
     const items = await apiGet();
     if (!live) {
